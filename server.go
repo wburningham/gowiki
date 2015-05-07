@@ -1,22 +1,31 @@
 package main
 
 import (
-    "fmt"
+    // "fmt"
     "net/http"
+    "html/template"
 )
 
-func handler(res http.ResponseWriter, req *http.Request) {
-    fmt.Fprintf(res, "Hi there, I love %s!", req.URL.Path[1:])
-}
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
     title := r.URL.Path[len("/view/"):]
     p, _ := loadPage(title)
-    fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+    t, _ := template.ParseFiles("view.html")
+    t.Execute(w, p)
+}
+
+func editHandler(w http.ResponseWriter, r *http.Request) {
+    title := r.URL.Path[len("/edit/"):]
+    p, err := loadPage(title)
+    if err != nil {
+        p = &Page{Title: title}
+    }
+    t, _ := template.ParseFiles("edit.html")
+    t.Execute(w, p)
 }
 
 func main() {
     http.HandleFunc("/view/", viewHandler)
-    http.HandleFunc("/", handler)
+    http.HandleFunc("/edit/", editHandler)
     http.ListenAndServe(":8080", nil)
 }
